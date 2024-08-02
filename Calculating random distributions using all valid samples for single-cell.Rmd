@@ -16,9 +16,9 @@ library(tidyverse)
 Load all the tpm log2 TPM files (having previously made sure only genes all samples have in common are kept in dataset) 
 ```{r}
 GSE142530_healthyLiver <- read.csv("path/to/GSE142530_healthyLiver_tpm_PC0.001_log2_genesymbol_dedup_subsetGenes.csv", header=T)
-gene_therapy <- read.csv("path/to/22LM-318V0159_geneTherapy_tpm_PC0.001_log2_genesymbol_dedup_subsetGenes.csv", header=T)
+gene_therapy <- read.csv("path/to/xxxxx.xxxxx159_geneTherapy_tpm_PC0.001_log2_genesymbol_dedup_subsetGenes.csv", header=T)
 AAV2_outbreak <- read.csv("path/to/Log2_TPM_dedup_AAV2Liver_filtered_subsetGenes.csv", header=T)
-seroneg_hep <- read.csv("path/to/seronegativeHep_tpm_PC0.001_log2_genesymbol_dedup_without24LM.017V0027_subsetGenes.csv", header=T)
+seroneg_hep <- read.csv("path/to/seronegativeHep_tpm_PC0.001_log2_genesymbol_dedup_withoutxxxxx.xxxxx027_subsetGenes.csv", header=T)
 ```
 
 Join all samples together
@@ -45,7 +45,7 @@ ipa_sc <- read.csv("path/to/sc_modules.csv",header=T)
 
 
 
-============================ PART 2: Create a mean expression for each gene across individuals ==========================
+=================== PART 2: Create a mean expression for each gene across individuals ====================
 
 ```{r}
 calculate_row_mean <- function(data) {
@@ -77,7 +77,7 @@ ipa_sc_reduced %>%
 ```
 
 
-========================= PART 3: Calculate the average of expression for each cluster ======================================
+========================= PART 3: Calculate the average of expression for each cluster =========================
 
 ```{r}
 ipa_sc_reduced_avg <- left_join(ipa_sc_reduced,mean_df,by="target") #merge cluster df with avg by gene
@@ -99,7 +99,7 @@ write.csv(ipa_sc_avg_bycluster, "1_avg-exp_allsamples_singleCellModules.csv", ro
 
 
 
-=========================== PART 4: Select random clusters of genes and generate rando, distributions =================
+==================== PART 4: Select random clusters of genes and generate rando, distributions ===============
 
 ```{r}
 possiblesizes <- unique(ipa_sc_avg_bycluster$count) #clusters' size present in IPA
