@@ -8,21 +8,21 @@ output: html_notebook
 
 ```{r}
 library(tidyverse)
-dataNormal <- read_csv("path/to/log2/gene/abundance.csv")
-dataNormal_long <- data %>% pivot_longer(!target, names_to = "sample", values_to = "log2_tpm")
-dataNormal_long$sample <- as.factor(dataNormal_long$sample)
+data <- read_csv("path/to/log2/gene/abundance.csv")
+data_long <- data %>% pivot_longer(!target, names_to = "sample", values_to = "log2_tpm")
+data_long$sample <- as.factor(data_long$sample)
 ```
 
 
 
 ```{r}
-qcNormal <- ggplot(dataNormal_long$GSM2545093,aes(log2_tpm)) +
+qc <- ggplot(data, aes(log2_tpm)) +
   geom_histogram() +
   facet_wrap(~sample) +
   theme_bw() +
   labs(y = "Gene count", 
        x = "log2 signal intensity/TPM")
 
-qcNormal + ylim(0,1000)
+qc + ylim(0,1000)
 ```
 
