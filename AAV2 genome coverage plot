@@ -2,14 +2,19 @@
 
 ## Define colour palettes (Wes Anderson movies)
 
+```{r}
 Darjeeling <- c("#FF0000", "#00A08A", "#F2AD00", "#F98400", "#5BBCD6")
 Rushmore <- c("#E1BD6D", "#EABE94", "#0B775E", "#35274A" ,"#F2300F")
 Cavalcanti <- c("#D8B70A", "#02401B", "#A2A475", "#81A88D", "#972D15")
+```
 
 ### read depth files for livers
+```{r}
 mydepth = read.delim("path/to/*.depth")
+```
 
 ### open pdf file to save the plot
+```{r}
 pdf("path/to/*.pdf")
 
 colnames(mydepth)<-c("genome","pos","cov")
@@ -27,10 +32,10 @@ text(0, -0.1, "5' ITR", cex=0.7)
 
 lines(c(4535,4679), as.integer(c(-1,-1)),col="dodgerblue", lwd=3) ## 3' ITR
 text(4600, -0.1, "3' ITR", cex=0.7) 
-
+```
 
 ### Plot Gene annotations for AAV2 
-
+```{r}
 lines(c(321,2252), as.integer(c(-3,-3)), col=rgb(153/255, 102/255, 153/255), lwd=3)  ### Rep68 protein
 text(80, -3, "Rep68", cex=0.7) 
 
@@ -62,10 +67,10 @@ text(4620, -10, "VP3", cex=0.7)
 
 lines(c(3929, 4396), as.integer(c(-12,-12)),col=rgb(153/255, 102/255, 153/255), lwd=3) ## X gene
 text(4620, -12, "X gene", cex=0.7) 
-
+```
 
 ### now plot coverage
-
+```{r}
 colnames(mydepth)<-c("genome","pos","cov")
 avg.cov<-round(mean(mydepth[,"cov"]))
 avg.genome<-4679
@@ -80,5 +85,5 @@ genome.recov.10x<- nrow(mydepth[which(mydepth[,"cov"]>=10),])/avg.genome
 points(x=mydepth[,"pos"], y=mydepth[,"cov"], type="l", col=Rushmore[5], lwd=2)
 
 dev.off()
-
+```
 
