@@ -1,0 +1,266 @@
+---
+title: "Whole transcriptome PCAs"
+---
+
+```{r}
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(stringr)
+```
+
+## Load files
+```{r}
+GSE142530_healthyLiver <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(GSE142530_healthyLiver)
+
+PRJEB35350_healthyLiver <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(PRJEB35350_healthyLiver)
+
+gene_therapy <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(gene_therapy)
+
+seroneg_hep_35 <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(seroneg_hep_35)
+
+seroneg_hep_45 <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(seroneg_hep_45)
+
+AAV2_outbreak <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(AAV2_outbreak)
+
+HBV <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(HBV)
+
+nature_healthyLiver <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(nature_healthyLiver)
+
+brain <- read.csv("path/to/log2/gene/abundance.csv", header=T)
+dim(brain)
+```
+
+# Make sure list of genes is the same
+Make sure datasets all have the same genes so that can compare them
+```{r}
+a <- inner_join(GSE142530_healthyLiver, PRJEB35350_healthyLiver, by = "target")
+b <- inner_join(a, gene_therapy, by = "target")
+dim(b)
+c <- inner_join(b, seroneg_hep_35, by = "target")
+dim(c)
+d <- inner_join(c, seroneg_hep_45, by = "target")
+dim(d)
+e <- inner_join(d, AAV2_outbreak, by = "target")
+dim(e)
+f <- inner_join(e, HBV, by = "target")
+dim(f)
+g <- inner_join(f, nature_healthyLiver, by ="target")
+dim(g)
+h <- inner_join(g, brain, by = "target")
+dim(h)
+```
+Now that I have the list of 15621 genes that all samples have in common, turn this into a dataframe and edit original data files to only contain those genes...
+```{r}
+subset_genes <- subset(h, select = c("target"))
+dim(subset_genes)
+
+GSE142530_healthyLiver_reduced <- subset(GSE142530_healthyLiver, target %in% subset_genes$target)
+dim(GSE142530_healthyLiver_reduced)
+PRJEB35350_healthyLiver_reduced <- subset(PRJEB35350_healthyLiver, target %in% subset_genes$target)
+dim(PRJEB35350_healthyLiver_reduced)
+gene_therapy_reduced <- subset(gene_therapy, target %in% subset_genes$target)
+dim(gene_therapy_reduced)
+seroneg_hep_35_reduced <- subset(seroneg_hep_35, target %in% subset_genes$target)
+dim(seroneg_hep_35_reduced)
+seroneg_hep_45_reduced <- subset(seroneg_hep_45, target %in% subset_genes$target)
+dim(seroneg_hep_45_reduced)
+AAV2_outbreak_reduced <- subset(AAV2_outbreak, target %in% subset_genes$target)
+dim(AAV2_outbreak_reduced)
+HBV_reduced <- subset(HBV, target %in% subset_genes$target)
+dim(HBV_reduced)
+nature_healthyLiver_reduced <- subset(nature_healthyLiver, target %in% subset_genes$target)
+dim(nature_healthyLiver_reduced)
+brain_reduced <- subset(brain, target %in% subset_genes$target)
+dim(brain_reduced)
+```
+If this worked, should all have 15621 genes
+
+## Change format of datasets so can combine them 
+
+```{r}
+GSE142530_healthyLiver_long <- GSE142530_healthyLiver_reduced %>% 
+  pivot_longer(2:13, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Healthy tissue from hepatic metastases resection") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+PRJEB35350_healthyLiver_long <- PRJEB35350_healthyLiver_reduced %>% 
+  pivot_longer(2:27, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Healthy postmortem whole liver") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+gene_therapy_long <- gene_therapy_reduced %>% 
+  pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Gene therapy") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+seroneg_hep_35_long <- seroneg_hep_35_reduced %>% 
+  pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Seronegative hepatitis sample xxxx-xxxxx035") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+seroneg_hep_45_long <- seroneg_hep_45_reduced %>% 
+  pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Seronegative hepatitis sample xxxx-xxxxx045") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+AAV2_outbreak_long <- AAV2_outbreak_reduced %>% 
+  pivot_longer(2:5, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="AAV2 liver") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+
+HBV_long <- HBV_reduced %>% 
+  pivot_longer(2:18, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="HBV liver") %>%
+  mutate("Data Type"="Microarray") %>%
+  rename("Target"="target")
+
+nature_healthyLiver_long <- nature_healthyLiver_reduced %>% 
+  pivot_longer(2:11, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Whole liver from patients with liver angioma") %>%
+  mutate("Data Type"="Microarray") %>%
+  rename("Target"="target")
+
+brain_long <- brain_reduced %>%
+  pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
+  mutate("Class"="Brain") %>%
+  mutate("Data Type"="RNA-seq") %>%
+  rename("Target"="target")
+```
+
+
+# PCA 1: Making a PCA plot of log2 TPM data for all genes for 3 sets of normal, AAV2 and HBV samples, to see whether microarray and RNAseq data cluster differently
+
+create My_Theme
+```{r}
+t = 10 #size of text
+m = 8 #size of margin around text
+tc = "black" #colour of text
+My_Theme = theme(
+  axis.title.x = element_text(size = 15, face = "bold", margin = margin(t = m)),
+  axis.text.x = element_text(size = 15, face = "bold", colour = tc, angle = 0, hjust = 0.5),
+  axis.title.y.left = element_text(size = 15, face = "bold", margin = margin(r = m)),
+  axis.title.y.right = element_text(size = 15, face = "bold", margin = margin(l = m)),
+  axis.text.y = element_text(size = 15, face = "bold", colour = tc),
+  legend.title = element_text(size=15, face = "bold", colour = tc),
+  legend.text = element_text(size=15, face = "bold", colour = tc),
+  plot.title = element_text(size=t, face = "bold", colour = tc),
+  strip.text = element_text(size=t, face = "bold", colour = tc),
+  strip.background = element_rect(fill = "gray90", colour = "black", size = 0.5),
+  panel.border = element_rect(fill = NA, linewidth = 0.5, colour = tc),
+  panel.background = element_rect(fill = "gray97"),
+  plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+  legend.position = "right", legend.justification = "top"
+)
+```
+
+Join data together
+```{r}
+all_samples <- rbind(GSE142530_healthyLiver_long, PRJEB35350_healthyLiver_long, AAV2_outbreak_long, HBV_long, nature_healthyLiver_long)
+all_samples <- all_samples %>% rename(Gene = Target)
+
+all_samples$Class <- factor(all_samples$Class, levels = c("Whole liver from patients with liver angioma", "Healthy postmortem whole liver", "Healthy tissue from hepatic metastases resection", "AAV2 liver", "HBV liver")) #Make sure your new categories are added here!
+all_samples$"Data Type" <- factor(all_samples$"Data Type", level = c("RNA-seq", "Microarray"))
+```
+
+Calculate PCA function
+```{r}
+library(broom)
+library(cowplot)
+
+mydata_forpca <- all_samples %>%
+  pivot_wider(names_from = Gene, values_from = "TPM log2")
+
+pca_calc <- mydata_forpca %>% select(where(is.numeric)) %>% prcomp(scale = F)
+```
+Plot PCA
+```{r}
+pca_calc %>% augment(mydata_forpca) %>% ggplot(aes(.fittedPC1, .fittedPC2, color = mydata_forpca$Class, shape = mydata_forpca$"Data Type"))+ 
+  geom_point(size = 3)+
+  scale_color_manual(name = "Sample Type",
+                     labels = c("Whole liver from patients with liver angioma", "Healthy postmortem whole liver", "Healthy tissue from hepatic metastases resection", "AAV2 liver", "HBV liver"),
+                     values = c("#292a2d", "#5c6674", "#92a0b3", "#de102a", "#377EB8"))+
+  scale_shape_manual(name = "Data Type",
+                     labels = c("RNA-seq", "Microarray"),
+                     values=c(16, 17))+
+  labs(x="PC1",y="PC2")+
+  My_Theme
+```
+
+# PCA 2: Making a PCA plot of log2 TPM data for all genes for RNA-seq normal and AAV2 only, and including brain control
+
+```{r}
+onlyRNAseq <- rbind(GSE142530_healthyLiver_long, AAV2_outbreak_long, brain_long)
+onlyRNAseq <- onlyRNAseq %>% rename(Gene = Target)
+onlyRNAseq <- onlyRNAseq[, -which(names(onlyRNAseq) == "Data Type")] #removing data type column as these are all RNA seq
+```
+
+```{r}
+onlyRNAseq$Class <- factor(onlyRNAseq$Class, levels = c("Healthy tissue from hepatic metastases resection", "AAV2 liver", "Brain")) #Make sure your new categories are added here!
+```
+
+PCA function
+```{r}
+mydata_forpca_cluster <- bottom_cluster %>%
+  pivot_wider(names_from = Gene, values_from = "TPM log2")
+
+pca_calc_cluster <- mydata_forpca_cluster %>% select(where(is.numeric)) %>% prcomp(scale = F)
+```
+
+Plotting PCA
+```{r}
+pca_calc_cluster %>% augment(mydata_forpca_cluster) %>%  ggplot(aes(.fittedPC1, .fittedPC2, color = Class))+ 
+  geom_point(size = 3)+
+  scale_color_manual(name = "Sample Type",
+                     labels = c("Healthy tissue from hepatic metastases resection", "AAV2 liver", "Brain"),
+                     values = c("#92a0b3", "#de102a", "#4DAF4A"))+
+  labs(x="PC1",y="PC2")+
+  My_Theme
+```
+
+
+
+# PCA 3: Making a PCA plot of log2 TPM data for all genes for RNA-seq samples only, including brain control and new hepatitis cases
+
+```{r}
+newSamples <- rbind(GSE142530_healthyLiver_long, gene_therapy_long, seroneg_hep_35_long, seroneg_hep_45_long, AAV2_outbreak_long)
+newSamples <- newSamples %>% rename(Gene = Target)
+newSamples <- newSamples[, -which(names(newSamples) == "Data Type")] #removing data type column as these are all RNA seq
+```
+
+```{r}
+newSamples$Class <- factor(newSamples$Class, levels = c("Healthy tissue from hepatic metastases resection", "AAV2 liver", "Gene therapy", "Seronegative hepatitis sample xxxx-xxxxx035", "Seronegative hepatitis sample xxxx-xxxxx045")) #Make sure your new categories are added here!
+```
+
+PCA function
+```{r}
+mydata_forpca_cluster <- newSamples %>%
+  pivot_wider(names_from = Gene, values_from = "TPM log2")
+
+pca_calc_cluster <- mydata_forpca_cluster %>% select(where(is.numeric)) %>% prcomp(scale = F)
+```
+
+Plotting PCA
+```{r}
+pca_calc_cluster %>% augment(mydata_forpca_cluster) %>%  ggplot(aes(.fittedPC1, .fittedPC2, color = Class))+ 
+  geom_point(size = 3)+
+  scale_color_manual(name = "Sample Type",
+                     labels = c("Normal", "AAV2", "Gene therapy", "xxxx-xxxxx035", "xxxx-xxxxx045"),
+                     values = c("#92a0b3", "#de102a", "#ff7821", "#F781BF", "#b87dc1"))+
+  labs(x="PC1",y="PC2")+
+  My_Theme
+```
