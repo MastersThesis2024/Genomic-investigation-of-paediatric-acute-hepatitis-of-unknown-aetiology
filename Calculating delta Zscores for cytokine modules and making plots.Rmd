@@ -16,7 +16,7 @@ library(stringr)
 
 Load the file with normal liver Z scores 
 ```{r}
-GSE142530_healthyLiver <- read.csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_GSE142530_healthyLiver_allsamplesRD.csv")
+GSE142530_healthyLiver <- read.csv("path/to/cytokine/module/Zscores/for/normal/liver.csv")
 dim(GSE142530_healthyLiver)
 ```
 
@@ -43,7 +43,7 @@ means_normal <- GSE142530_healthyLiver_long %>%
 
 Load AAV2 liver Z-scores and reformat data
 ```{r}
-zscores_AAV2 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_natureAAV2liver_allsamplesRD.csv")
+zscores_AAV2 <- read_csv("path/to/cytokine/module/Zscores/for/AAV2/liver.csv")
 
 zscores_AAV2_long <- zscores_AAV2 %>% 
   pivot_longer(3:6, names_to = "Sample", values_to = "Zscore") %>% 
@@ -54,46 +54,46 @@ zscores_AAV2_long <- zscores_AAV2 %>%
 
 Load brain control Z-scores and reformat data
 ```{r}
-zscores_brain <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_X23LM.095V0104_brain_allsamplesRD.csv")
+zscores_brain <- read_csv("path/to/cytokine/module/Zscores/for/brain/control.csv")
 
 brain <- zscores_brain %>% 
   mutate("Class"="Brain") %>% #class name can change 
-  rename("Module"=regulator, "Zscore"=X23LM.095V0104) %>% #CHANGE HERE!
+  rename("Module"=regulator, "Zscore"=xxxxx.xxxxx104) %>% #CHANGE HERE!
   select(-"...1") %>% # removes the ...1 column
-  mutate("Sample"="X23LM.095V0104") #CHANGE HERE!
+  mutate("Sample"="xxxxx.xxxxx104") #CHANGE HERE!
 ```
 
-Load 22LM-318V0159 gene therapy sample Z-scores and reformat data 
+Load xxxxx.xxxxx159 gene therapy sample Z-scores and reformat data 
 ```{r}
-zscores_gene_therapy <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_22LM-318V0159_geneTherapy_allsamplesRD.csv")
+zscores_gene_therapy <- read_csv("path/to/cytokine/module/Zscores/for/gene/therapy/sample.csv")
 
 gene_therapy <- zscores_gene_therapy %>% 
   mutate("Class"="Gene Therapy") %>% #class name can change 
-  rename("Module"=regulator, "Zscore"=X22LM.318V0159) %>% #CHANGE HERE!
+  rename("Module"=regulator, "Zscore"=xxxxx.xxxxx159) %>% #CHANGE HERE!
   select(-"...1") %>% # removes the ...1 column
-  mutate("Sample"="X22LM.318V0159") #CHANGE HERE!
+  mutate("Sample"="xxxxx.xxxxx159") #CHANGE HERE!
 ```
 
-Load 24LM-060V0035 Z-scores and reformat data 
+Load xxxxx.xxxxx035 Z-scores and reformat data 
 ```{r}
-zscores_24LM060V0035 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_Seronegative_Hepatitis_24LM.060V0035_allsamplesRD.csv")
-dim(zscores_24LM060V0035)
+zscores_xxxxxxxxxx035 <- read_csv("path/to/cytokine/module/Zscores/for/sample/xxxxxxxxxx035.csv")
+dim(zscores_xxxxxxxxxx035)
 
-zscores_24LM060V0035_long <- zscores_24LM060V0035 %>% 
+zscores_xxxxxxxxxx035_long <- zscores_xxxxxxxxxx035 %>% 
   pivot_longer(3, names_to = "Sample", values_to = "Zscore") %>% 
-  mutate("Class"="24LM-060V0035") %>%
+  mutate("Class"="xxxxx.xxxxx035") %>%
   rename("Module"="regulator") %>% 
    select(-"...1")
 ```
 
-Load 24LM-060V0045 Z-scores and reformat data 
+Load xxxxx.xxxxx045 Z-scores and reformat data 
 ```{r}
-zscores_24LM071V0045 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_Seronegative_Hepatitis_24LM.071V0045_allsamplesRD.csv")
-dim(zscores_24LM071V0045)
+zscores_xxxxxxxxxx045 <- read_csv("path/to/cytokine/module/Zscores/for/sample/xxxxxxxxxx045.csv")
+dim(zscores_xxxxxxxxxx045)
 
-zscores_24LM071V0045_long <- zscores_24LM071V0045 %>% 
+zscores_xxxxxxxxxx045_long <- zscores_xxxxxxxxxx045 %>% 
   pivot_longer(3, names_to = "Sample", values_to = "Zscore") %>% 
-  mutate("Class"="24LM-071V0045") %>%
+  mutate("Class"="xxxxx.xxxxx045") %>%
   rename("Module"="regulator") %>% 
    select(-"...1")
 ```
@@ -103,7 +103,7 @@ zscores_24LM071V0045_long <- zscores_24LM071V0045 %>%
 
 Join data together and adjust z-scores with the "normal" group. 
 ```{r}
-e <- rbind(GSE142530_healthyLiver_long, zscores_AAV2_long, brain, gene_therapy, zscores_24LM060V0035_long, zscores_24LM071V0045_long)
+e <- rbind(GSE142530_healthyLiver_long, zscores_AAV2_long, brain, gene_therapy, zscores_xxxxxxxxxx035_long, zscores_xxxxxxxxxx045_long)
 f <- e %>% 
   left_join(means_normal, by="Module") %>% 
   rename("NormalLiverAve.Zscore"="mean(Zscore)") %>% 
@@ -143,7 +143,7 @@ My_Theme = theme(
   legend.position = "right", legend.justification = "top"
 )
 
-f$Class <- factor(f$Class, levels = c("Normal", "AAV2", "Gene Therapy", "24LM-060V0035", "24LM-071V0045", "Brain")) 
+f$Class <- factor(f$Class, levels = c("Normal", "AAV2", "Gene Therapy", "xxxxx.xxxxx035", "xxxxx.xxxxx045", "Brain")) 
 ```
 
 Make scatterplot
@@ -173,7 +173,7 @@ pca_calc <- mydata_forpca %>% select(where(is.numeric)) %>% prcomp(scale = F)
 ### plotting PCA
 pca_calc %>% augment(mydata_forpca) %>%  ggplot(aes(.fittedPC1, .fittedPC2, color = Class))+ 
   geom_point(size = 3)+
-  scale_color_manual(values=c(Normal="#92a0b3",AAV2="#de102a", "Gene Therapy"="#ff7821", "24LM-060V0035"="#F781BF", "24LM-071V0045"="#b87dc1", Brain= "#4DAF4A"))+
+  scale_color_manual(values=c(Normal="#92a0b3",AAV2="#de102a", "Gene Therapy"="#ff7821", "xxxxx.xxxxx035"="#F781BF", "xxxxx.xxxxx045"="#b87dc1", Brain= "#4DAF4A"))+
   labs(x="PC1",y="PC2")+
   My_Theme
 ```
@@ -194,13 +194,13 @@ FilenameAnnotations <- f %>% select(Class,Sample) %>% distinct()
 i <- FilenameAnnotations
 ann <- data.frame(i$Class)
 colnames(ann) <- c("Class")
-ann$Class <- factor(ann$Class, levels = c("Normal","AAV2", "Gene Therapy", "24LM-060V0035", "24LM-071V0045", "Brain"))
+ann$Class <- factor(ann$Class, levels = c("Normal","AAV2", "Gene Therapy", "xxxxx.xxxxx035", "xxxxx.xxxxx045", "Brain"))
 colours <- list("Class" = c(
   "Normal"=	"#92a0b3",
   "AAV2"=	"#de102a",
   "Gene Therapy"=	"#ff7821",
-  "24LM-060V0035"="#F781BF",
-  "24LM-071V0045"="#b87dc1",
+  "xxxxx.xxxxx035"="#F781BF",
+  "xxxxx.xxxxx045"="#b87dc1",
   "Brain" = "#4DAF4A"))
 colAnn <- HeatmapAnnotation(df = ann,
                             which = 'col',
