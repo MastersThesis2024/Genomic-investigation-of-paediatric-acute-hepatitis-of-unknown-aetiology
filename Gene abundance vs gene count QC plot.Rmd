@@ -1,0 +1,28 @@
+---
+title: "log2 gene abundance vs gene count QC plot"
+output: html_notebook
+---
+
+## Modification of original script by Dr Venturini
+## Quick QC to check that gene abundance distribution looks normal
+
+```{r}
+library(tidyverse)
+data <- read_csv("path/to/log2/gene/abundance.csv")
+data_long <- data %>% pivot_longer(!target, names_to = "sample", values_to = "log2_tpm")
+data_long$sample <- as.factor(data_long$sample)
+```
+
+
+
+```{r}
+qc <- ggplot(data, aes(log2_tpm)) +
+  geom_histogram() +
+  facet_wrap(~sample) +
+  theme_bw() +
+  labs(y = "Gene count", 
+       x = "log2 signal intensity/TPM")
+
+qc + ylim(0,1000)
+```
+
