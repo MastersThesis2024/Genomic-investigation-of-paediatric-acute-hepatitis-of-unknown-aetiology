@@ -1,0 +1,258 @@
+---
+title: "Calculating delta Zscores for cytokine modules and making plots"
+---
+# Modification of original script by Dr Venturini
+
+In this script, I will firstly be calculating the mean Z-score for each cytokine module across the 12 normal samples. I will then calculate the delta Z-scores (difference from mean normal Z-score) for each normal, brain, AAV2, gene-therapy and seronegative hepatitis sample. Finally I will create plots to visualise differences between groups.
+
+```{r}
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(stringr)
+```
+
+=========================== PART 1: calculate mean Z-scores across normal samples =================================
+
+Load the file with normal liver Z scores 
+```{r}
+GSE142530_healthyLiver <- read.csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_GSE142530_healthyLiver_allsamplesRD.csv")
+dim(GSE142530_healthyLiver)
+```
+
+Change it into the correct format for calculations
+```{r}
+GSE142530_healthyLiver_long <- GSE142530_healthyLiver %>% 
+  pivot_longer(3:14, names_to = "Sample", values_to = "Zscore") %>% 
+  mutate("Class"="Normal") %>%
+  rename("Module"="regulator") %>% 
+   select(-"X")
+```
+
+Calculate mean Z-scores for normal
+```{r}
+means_normal <- GSE142530_healthyLiver_long %>%  
+  group_by(Module,Class) %>% 
+  summarise(mean(Zscore)) %>% 
+  filter(Class=="Normal") %>% 
+  select(-Class)
+```
+
+
+===================================== PART 2: load data for other samples ====================================
+
+Load AAV2 liver Z-scores and reformat data
+```{r}
+zscores_AAV2 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_natureAAV2liver_allsamplesRD.csv")
+
+zscores_AAV2_long <- zscores_AAV2 %>% 
+  pivot_longer(3:6, names_to = "Sample", values_to = "Zscore") %>% 
+  mutate("Class"="AAV2") %>%
+  rename("Module"="regulator") %>% 
+   select(-"...1")
+```
+
+Load brain control Z-scores and reformat data
+```{r}
+zscores_brain <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_X23LM.095V0104_brain_allsamplesRD.csv")
+
+brain <- zscores_brain %>% 
+  mutate("Class"="Brain") %>% #class name can change 
+  rename("Module"=regulator, "Zscore"=X23LM.095V0104) %>% #CHANGE HERE!
+  select(-"...1") %>% # removes the ...1 column
+  mutate("Sample"="X23LM.095V0104") #CHANGE HERE!
+```
+
+Load 22LM-318V0159 gene therapy sample Z-scores and reformat data 
+```{r}
+zscores_gene_therapy <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_22LM-318V0159_geneTherapy_allsamplesRD.csv")
+
+gene_therapy <- zscores_gene_therapy %>% 
+  mutate("Class"="Gene Therapy") %>% #class name can change 
+  rename("Module"=regulator, "Zscore"=X22LM.318V0159) %>% #CHANGE HERE!
+  select(-"...1") %>% # removes the ...1 column
+  mutate("Sample"="X22LM.318V0159") #CHANGE HERE!
+```
+
+Load 24LM-060V0035 Z-scores and reformat data 
+```{r}
+zscores_24LM060V0035 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_Seronegative_Hepatitis_24LM.060V0035_allsamplesRD.csv")
+dim(zscores_24LM060V0035)
+
+zscores_24LM060V0035_long <- zscores_24LM060V0035 %>% 
+  pivot_longer(3, names_to = "Sample", values_to = "Zscore") %>% 
+  mutate("Class"="24LM-060V0035") %>%
+  rename("Module"="regulator") %>% 
+   select(-"...1")
+```
+
+Load 24LM-060V0045 Z-scores and reformat data 
+```{r}
+zscores_24LM071V0045 <- read_csv("C:/Users/iring/OneDrive/Documents/UCL/Msc Cell and Gene Therapy Research Project/Transcriptomics/Final Transcriptomics Calculations/Cytokine modules/FINAL - all samples RD/zscores_Seronegative_Hepatitis_24LM.071V0045_allsamplesRD.csv")
+dim(zscores_24LM071V0045)
+
+zscores_24LM071V0045_long <- zscores_24LM071V0045 %>% 
+  pivot_longer(3, names_to = "Sample", values_to = "Zscore") %>% 
+  mutate("Class"="24LM-071V0045") %>%
+  rename("Module"="regulator") %>% 
+   select(-"...1")
+```
+
+
+========================== PART 3: putting data together and calculating delta Z-scores =====================
+
+Join data together and adjust z-scores with the "normal" group. 
+```{r}
+e <- rbind(GSE142530_healthyLiver_long, zscores_AAV2_long, brain, gene_therapy, zscores_24LM060V0035_long, zscores_24LM071V0045_long)
+f <- e %>% 
+  left_join(means_normal, by="Module") %>% 
+  rename("NormalLiverAve.Zscore"="mean(Zscore)") %>% 
+  mutate("Delta.Zscore"=Zscore-NormalLiverAve.Zscore)
+```
+
+
+
+========================================= PART 4: PLOTS ==============================================
+
+```{r}
+library(RColorBrewer) 
+display.brewer.all()
+display.brewer.pal(n= 9, name= "Set1")  
+brewer.pal(n = 9, name = "Set1")  
+```
+
+Create My_Theme
+```{r}
+t = 10 #size of text
+m = 8 #size of margin around text
+tc = "black" #colour of text
+My_Theme = theme(
+  axis.title.x = element_text(size = 15, face = "bold", margin = margin(t = m)),
+  axis.text.x = element_text(size = t, face = "bold", colour = tc, angle = 0, hjust = 0.5),
+  axis.title.y.left = element_text(size = 15, face = "bold", margin = margin(r = m)),
+  axis.title.y.right = element_text(size = 15, face = "bold", margin = margin(l = m)),
+  axis.text.y = element_text(size = 15, face = "bold", colour = tc),
+  legend.title = element_text(size=15, face = "bold", colour = tc),
+  legend.text = element_text(size=15, face = "bold", colour = tc),
+  plot.title = element_text(size=t, face = "bold", colour = tc),
+  strip.text = element_text(size=t, face = "bold", colour = tc),
+  strip.background = element_rect(fill = "gray90", colour = "black", size = 0.5),
+  panel.border = element_rect(fill = NA, linewidth = 0.5, colour = tc),
+  panel.background = element_rect(fill = "gray97"),
+  plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
+  legend.position = "right", legend.justification = "top"
+)
+
+f$Class <- factor(f$Class, levels = c("Normal", "AAV2", "Gene Therapy", "24LM-060V0035", "24LM-071V0045", "Brain")) 
+```
+
+Make scatterplot
+```{r}
+ggplot(f)+
+  geom_point(aes(Module, Delta.Zscore, colour = Class), size = 3, alpha = 0.8)+
+  scale_colour_manual(values = c("#92a0b3", "#de102a", "#ff7821", "#F781BF", "#b87dc1", "#4DAF4A"))+
+  geom_hline(aes(yintercept = 0), linewidth = 0.5, linetype = "dashed")+
+  scale_y_continuous(breaks=c(-10,-5,0,5,10,15)) +
+  labs(colour = "Group",
+       y = "Delta Zscore cf. average of normal liver", 
+       x = "Cytokine inducible gene expression modules") +
+  My_Theme + theme(axis.text.x = element_text(angle = -45, hjust=0))
+```
+
+
+Make PCA plot
+```{r}
+library(broom)
+
+### calculating PCA data
+mydata_forpca <- f %>% select(Module, Class, Sample, Delta.Zscore) %>% 
+  pivot_wider(names_from = Module, values_from = Delta.Zscore)
+
+pca_calc <- mydata_forpca %>% select(where(is.numeric)) %>% prcomp(scale = F)
+
+### plotting PCA
+pca_calc %>% augment(mydata_forpca) %>%  ggplot(aes(.fittedPC1, .fittedPC2, color = Class))+ 
+  geom_point(size = 3)+
+  scale_color_manual(values=c(Normal="#92a0b3",AAV2="#de102a", "Gene Therapy"="#ff7821", "24LM-060V0035"="#F781BF", "24LM-071V0045"="#b87dc1", Brain= "#4DAF4A"))+
+  labs(x="PC1",y="PC2")+
+  My_Theme
+```
+
+
+Make heatmap
+```{r}
+library(ComplexHeatmap)
+library(circlize)
+
+### create numerical data matrix with row & column names
+t=12
+heatmapData <- mydata_forpca %>% select(-Class) %>%
+  remove_rownames %>% column_to_rownames(var="Sample") %>% t
+
+### create annotations (for help see: https://www.biostars.org/p/317349/)
+FilenameAnnotations <- f %>% select(Class,Sample) %>% distinct()
+i <- FilenameAnnotations
+ann <- data.frame(i$Class)
+colnames(ann) <- c("Class")
+ann$Class <- factor(ann$Class, levels = c("Normal","AAV2", "Gene Therapy", "24LM-060V0035", "24LM-071V0045", "Brain"))
+colours <- list("Class" = c(
+  "Normal"=	"#92a0b3",
+  "AAV2"=	"#de102a",
+  "Gene Therapy"=	"#ff7821",
+  "24LM-060V0035"="#F781BF",
+  "24LM-071V0045"="#b87dc1",
+  "Brain" = "#4DAF4A"))
+colAnn <- HeatmapAnnotation(df = ann,
+                            which = 'col',
+                            col = colours,
+                            border = T,
+                            show_annotation_name=F,
+                            annotation_name_gp = gpar(fontsize=10, fontface = "bold")
+                            )
+
+### select heatmap colours
+library(colorRamp2)
+col_fun = colorRamp2(c(0, 5, 10), c("#2166AC", "#FDF0D5", "#950018"))
+
+### plot heatmap 
+hm <- Heatmap(heatmapData,
+              col = col_fun,
+              border_gp = gpar(col = "black", lty = 1),
+              rect_gp = gpar(col = "black", lwd = 1),
+              #column_title = "...",
+              #column_title_gp = gpar(fontsize = 10),
+              row_title = "Cytokine modules",
+              row_title_gp = gpar(fontsize=12, fontface = "bold"),
+              show_row_names = T,
+              row_names_gp = gpar(fontsize=8, fontface = "bold"),
+              show_column_names = F,
+              column_title = "Samples",
+              column_title_gp = gpar(fontsize=12, fontface = "bold"),
+              #column_names_gp = gpar(fontsize=t),
+              #column_names_rot = 0,
+              #column_names_centered = T,
+              #column_names_gp = gpar(fontsize = 10),
+              #name = "z score",
+              cluster_rows = T,
+              cluster_columns = T,
+              clustering_method_columns = "ward.D",
+              column_split = 2,
+              #row_split = 2,
+              top_annotation = colAnn,
+              heatmap_height = unit(20, "cm"),
+              #right_annotation = row.ha,
+              #show_annotation_name = F,
+              heatmap_legend_param = list(
+                direction = "horizontal",
+                #grid_height = 0.5,
+                at = c(0, 2, 4, 6, 10),
+                labels = c(-0, 2, 4, 6, 10),
+                title = "Expression delta Z-score",
+                legend_width = unit(2, "cm"),
+                title_position = "lefttop")
+              )
+
+draw(hm, heatmap_legend_side = "bottom", annotation_legend_side = "right")
+```
+
+

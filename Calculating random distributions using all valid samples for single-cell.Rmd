@@ -1,0 +1,186 @@
+---
+title: "Calculating random distributions for immune cell modules"
+---
+
+###### Adaptation to immune cell modules of the original correlation script for cytokine modules by Cristina Venturini 
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tidyverse)
+```
+
+======================= PART 1: Loading and formatting TPM files ========================
+
+Load all the tpm log2 TPM files (having previously made sure only genes all samples have in common are kept in dataset) 
+```{r}
+GSE142530_healthyLiver <- read.csv("path/to/GSE142530_healthyLiver_tpm_PC0.001_log2_genesymbol_dedup_subsetGenes.csv", header=T)
+gene_therapy <- read.csv("path/to/22LM-318V0159_geneTherapy_tpm_PC0.001_log2_genesymbol_dedup_subsetGenes.csv", header=T)
+AAV2_outbreak <- read.csv("path/to/Log2_TPM_dedup_AAV2Liver_filtered_subsetGenes.csv", header=T)
+seroneg_hep <- read.csv("path/to/seronegativeHep_tpm_PC0.001_log2_genesymbol_dedup_without24LM.017V0027_subsetGenes.csv", header=T)
+```
+
+Join all samples together
+```{r}
+all_samples <- GSE142530_healthyLiver %>%
+  left_join(gene_therapy, by = "target") %>%
+  left_join(AAV2_outbreak, by = "target") %>%
+  left_join(seroneg_hep, by = "target")
+```
+
+
+Turn the target column into row IDs, so that they don't get included in the means calculation below
+```{r}
+all_samples <- all_samples %>%
+  remove_rownames() %>%
+  column_to_rownames(var = "target")
+```
+
+
+Load single-cell modules file
+```{r}
+ipa_sc <- read.csv("path/to/sc_modules.csv",header=T) 
+```
+
+
+
+============================ PART 2: Create a mean expression for each gene across individuals ==========================
+
+```{r}
+calculate_row_mean <- function(data) {
+  if (ncol(data) == 1) {
+    return(data)  # If only one column, return the original value
+  } else {
+    return(as.data.frame(rowMeans(data, na.rm = TRUE)))  # If more than one column, calculate row means
+  }
+}
+```
+
+```{r}
+mean_df <- as.data.frame(calculate_row_mean(all_samples))
+colnames(mean_df) <- c("AverageSamples")
+
+## Format the ipa_sc output file
+# assign an ID number to each cell_type module
+ipa_sc <- ipa_sc %>% 
+  group_by(cell_type) %>%
+  mutate(ID=cur_group_id())
+#only the genes found in the transcriptome co-correlation matrix
+mean_df$target <- rownames(mean_df)
+ipa_sc_reduced <- subset(ipa_sc, target %in% mean_df$target) 
+dim(ipa_sc_reduced)  #370     3
+#create count column
+ipa_sc_reduced %>%
+  group_by(ID) %>%
+  mutate("count" = n()) -> ipa_sc_reduced # add a column with the cluster size
+```
+
+
+========================= PART 3: Calculate the average of expression for each cluster ======================================
+
+```{r}
+ipa_sc_reduced_avg <- left_join(ipa_sc_reduced,mean_df,by="target") #merge cluster df with avg by gene
+
+ipa_sc_avg_bycluster <- ipa_sc_reduced_avg %>% group_by(cell_type,count,ID) %>% 
+  summarise(AvgCluster = mean(AverageSamples))
+
+#ipa_sc_avg_bycluster will include all info about the clusters 
+
+dim(ipa_sc_avg_bycluster)
+#15 clusters 
+```
+
+## E. Output file
+```{r}
+setwd("path/to/working/directory")
+write.csv(ipa_sc_avg_bycluster, "1_avg-exp_allsamples_singleCellModules.csv", row.names = F)
+```
+
+
+
+=========================== PART 4: Select random clusters of genes and generate rando, distributions =================
+
+```{r}
+possiblesizes <- unique(ipa_sc_avg_bycluster$count) #clusters' size present in IPA
+```
+
+#function to pick genes randomly to create clusters the same size of IPA's clusters. 
+#data_df is the dataframe containing all average expression values for each gene, N is the number of iterations (100), SIZECLUSTER a vector with the possible clusters' size (can be 4:807 or "possiblesizes" vector)
+#map_dfr is a handy R function to avoid for loops (which can be slow in R)
+```{r}
+samplingclusters <- function(data_df,N,SIZECLUSTER){
+  map_dfr(seq_len(N), ~ data_df %>% sample_n(SIZECLUSTER) %>% 
+            mutate(iteration = .x))  %>% 
+    mutate(clustersize = SIZECLUSTER) %>% 
+    group_by(iteration,clustersize) %>% 
+    summarise(Avg = mean(AverageSamples))
+}
+```
+
+```{r}
+#running the function - with 100 iteration this takes < 1 min
+res <- possiblesizes %>%
+  map_dfr(samplingclusters, data=mean_df,N=500)
+```
+```{r}
+#calculate mean for each clusters' size, sd and other 
+random_distributions_100 <- res %>% group_by(clustersize) %>% 
+  summarise(AvgExp=mean(Avg),SDExp=sd(Avg),X84.13=AvgExp+SDExp,X97.72=AvgExp+2*SDExp,X99.86=AvgExp+3*SDExp) 
+```
+
+
+==================================== SOME PLOTS ========================================
+
+```{r}
+ggplot(random_distributions_100, aes(x=AvgExp)) + 
+  geom_histogram(fill = "red", alpha = 0.2) +
+  geom_histogram(data=ipa_sc_avg_bycluster,aes(x=AvgCluster),fill = "blue", alpha = 0.2) +
+  #xlim(-9.965784,14.957397) +
+  theme_classic()
+
+ggplot(random_distributions_100,aes(x=AvgExp,y=clustersize)) +
+  geom_point() +
+  theme_classic()
+
+#ipa_avg_bycluster
+ggplot(ipa_sc_avg_bycluster,aes(x=AvgCluster,y=count)) +
+  geom_point() +
+  theme_classic()
+```
+
+
+=========================================== Output file ========================================
+
+```{r}
+colnames(random_distributions_100) <- c("size", "mean", "sd", "X84.13", "X97.72",	"X99.86")
+setwd("path/to/working/directory")
+write.csv(random_distributions_100,
+          paste0("2_random_distributions_allsamples_singleCellModules",Sys.Date(),".csv"),
+          row.names = F)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
