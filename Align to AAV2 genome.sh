@@ -5,7 +5,7 @@
         -1 /path/to/first/input/FASTQ/file/containing/unmapped/reads/*.unmapped_1.fastq.gz \
         -2 /path/to/second/input/FASTQ/file/containing/unmapped/reads/*.unmapped_2.fastq.gz \
         -S /path/to/output/SAM/file/*_bowtie2alignAAV2.sam) \
-        2> /path/to/log/fil/*_log.txt
+        2> /path/to/log/file/*_log.txt
 
 # Extract mapped reads
 mamba activate samtools
