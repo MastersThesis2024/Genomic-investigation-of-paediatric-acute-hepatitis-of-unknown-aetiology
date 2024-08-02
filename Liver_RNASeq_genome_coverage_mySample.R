@@ -1,0 +1,84 @@
+## Modification of original script by Sofia Morfopoulou
+
+## Define colour palettes (Wes Anderson movies)
+
+Darjeeling <- c("#FF0000", "#00A08A", "#F2AD00", "#F98400", "#5BBCD6")
+Rushmore <- c("#E1BD6D", "#EABE94", "#0B775E", "#35274A" ,"#F2300F")
+Cavalcanti <- c("#D8B70A", "#02401B", "#A2A475", "#81A88D", "#972D15")
+
+### read depth files for livers
+mydepth = read.delim("path/to/*.depth")
+
+### open pdf file to save the plot
+pdf("path/to/*.pdf")
+
+colnames(mydepth)<-c("genome","pos","cov")
+
+plot(x=mydepth[,"pos"], y=mydepth[,"cov"], type="n", col="#000000",  xlim=c(0, 4900), yaxt="n", xaxt="n",  ylim=c(-12,40), frame.plot=F, ylab="Genome coverage", xlab="AAV2 genome" , lwd=2, main="24LM-071V0045 Liver DNA-seq alignment to AAV2 genome")
+
+axis(side=1,at=c(0,1000,2000,3000,4000,4679), labels=c("","1000bp", "2000bp", "3000bp", "4000bp", "4679bp" ), lwd=3, cex.axis=0.8)
+
+axis(side=2,at=c(0,10, 20, 30, 40), labels=c("0","10", "20", "30", "40"), lwd=3, cex.axis=0.8)
+
+
+lines(c(1,145), as.integer(c(-1,-1)),col="dodgerblue", lwd=3) ## 5 ITR 
+text(0, -0.1, "5' ITR", cex=0.7) 
+
+
+lines(c(4535,4679), as.integer(c(-1,-1)),col="dodgerblue", lwd=3) ## 3' ITR
+text(4600, -0.1, "3' ITR", cex=0.7) 
+
+
+### Plot Gene annotations for AAV2 
+
+lines(c(321,2252), as.integer(c(-3,-3)), col=rgb(153/255, 102/255, 153/255), lwd=3)  ### Rep68 protein
+text(80, -3, "Rep68", cex=0.7) 
+
+
+lines(c(321, 2186), as.integer(c(-5,-5)), col=rgb(153/255, 102/255, 153/255), lwd=3) #### Rep78 protein 
+text(80, -5, "Rep78", cex=0.7) 
+
+
+lines(c(993,2252), as.integer(c(-7,-7)), col=rgb(153/255, 102/255, 153/255), lwd=3) ## Rep40 protein
+text(80, -7, "Rep40", cex=0.7) 
+
+lines(c(993,2186), as.integer(c(-9,-9)), col=rgb(153/255, 102/255, 153/255), lwd=3) ## Rep52 protein
+text(80, -9, "Rep52", cex=0.7) 
+
+
+lines(c(2203, 4410), as.integer(c(-4,-4)), col=Rushmore[3], lwd=3) ## major coat protein VP1
+text(4750, -4, "VP1-cap ORF", cex=0.7) 
+
+lines(c(2614,4410), as.integer(c(-6,-6)), col=Rushmore[3], lwd=3)  ## major coat protein VP2
+text(4620, -6, "VP2", cex=0.7) 
+
+lines(c(2729, 3343), as.integer(c(-8,-8)),col=rgb(153/255, 102/255, 153/255), lwd=3)  ### assembly  activting protein AAP
+text(4620, -8, "AAP", cex=0.7) 
+
+
+lines(c(2809, 4410), as.integer(c(-10,-10)),col=Rushmore[3], lwd=3) ## major coat protein VP3
+text(4620, -10, "VP3", cex=0.7) 
+
+
+lines(c(3929, 4396), as.integer(c(-12,-12)),col=rgb(153/255, 102/255, 153/255), lwd=3) ## X gene
+text(4620, -12, "X gene", cex=0.7) 
+
+
+### now plot coverage
+
+colnames(mydepth)<-c("genome","pos","cov")
+avg.cov<-round(mean(mydepth[,"cov"]))
+avg.genome<-4679
+nonCoveredB<-avg.genome-nrow(mydepth)
+avg.cov.all<-round(mean(c(mydepth[,"cov"],rep(0,nonCoveredB))))
+genome.recov<-nrow(mydepth)/avg.genome
+
+genome.recov.5x<- nrow(mydepth[which(mydepth[,"cov"]>=5),])/avg.genome
+genome.recov.10x<- nrow(mydepth[which(mydepth[,"cov"]>=10),])/avg.genome
+
+
+points(x=mydepth[,"pos"], y=mydepth[,"cov"], type="l", col=Rushmore[5], lwd=2)
+
+dev.off()
+
+
