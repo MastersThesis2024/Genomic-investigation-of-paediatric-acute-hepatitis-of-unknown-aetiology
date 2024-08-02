@@ -107,13 +107,13 @@ gene_therapy_long <- gene_therapy_reduced %>%
 
 seroneg_hep_35_long <- seroneg_hep_35_reduced %>% 
   pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
-  mutate("Class"="Seronegative hepatitis sample 24LM-060V0035") %>%
+  mutate("Class"="Seronegative hepatitis sample xxxx-xxxxx035") %>%
   mutate("Data Type"="RNA-seq") %>%
   rename("Target"="target")
 
 seroneg_hep_45_long <- seroneg_hep_45_reduced %>% 
   pivot_longer(2, names_to = "Sample", values_to = "TPM log2") %>% 
-  mutate("Class"="Seronegative hepatitis sample 24LM-071V0045") %>%
+  mutate("Class"="Seronegative hepatitis sample xxxx-xxxxx045") %>%
   mutate("Data Type"="RNA-seq") %>%
   rename("Target"="target")
 
@@ -243,7 +243,7 @@ newSamples <- newSamples[, -which(names(newSamples) == "Data Type")] #removing d
 ```
 
 ```{r}
-newSamples$Class <- factor(newSamples$Class, levels = c("Healthy tissue from hepatic metastases resection", "AAV2 liver", "Gene therapy", "Seronegative hepatitis sample 24LM-060V0035", "Seronegative hepatitis sample 24LM-071V0045")) #Make sure your new categories are added here!
+newSamples$Class <- factor(newSamples$Class, levels = c("Healthy tissue from hepatic metastases resection", "AAV2 liver", "Gene therapy", "Seronegative hepatitis sample xxxx-xxxxx035", "Seronegative hepatitis sample xxxx-xxxxx045")) #Make sure your new categories are added here!
 ```
 
 PCA function
@@ -259,7 +259,7 @@ Plotting PCA
 pca_calc_cluster %>% augment(mydata_forpca_cluster) %>%  ggplot(aes(.fittedPC1, .fittedPC2, color = Class))+ 
   geom_point(size = 3)+
   scale_color_manual(name = "Sample Type",
-                     labels = c("Normal", "AAV2", "Gene therapy", "24LM-060V0035", "24LM-071V0045"),
+                     labels = c("Normal", "AAV2", "Gene therapy", "xxxx-xxxxx035", "xxxx-xxxxx045"),
                      values = c("#92a0b3", "#de102a", "#ff7821", "#F781BF", "#b87dc1"))+
   labs(x="PC1",y="PC2")+
   My_Theme
